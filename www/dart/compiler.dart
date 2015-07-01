@@ -20,7 +20,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-part of StickerBook;
+part of tern2;
 
 
 /**
@@ -46,14 +46,14 @@ class TangibleCompiler {
 /**
  * Tangible compile function: generate a program from a bitmap image
  */
-  Program compile(ImageData image) {
+  Program compile(ImageData image, CanvasRenderingContext2D ctx) {
       
     Program program = new Program();
 
     //-----------------------------------------------------------
     // 1. Create a list of topcodes from the bitmap image
     //-----------------------------------------------------------
-    List<TopCode> spots = scanner.scan(image);
+    List<TopCode> spots = scanner.scan(image, ctx);
 
     //-----------------------------------------------------------
     // 2. Convert topcodes to statements
