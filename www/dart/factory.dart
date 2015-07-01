@@ -20,7 +20,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-part of StickerBook;
+part of tern2;
 
 
 class StatementFactory {
@@ -32,7 +32,7 @@ class StatementFactory {
     statements = new Map<int, Statement>();
     for (var def in definitions) {
       Statement s = new Statement.fromJSON(def);
-      statements[def['code']] = s;
+      statements[def['id']] = s;
     }
   }
   
@@ -56,115 +56,127 @@ var STATEMENTS = [
   
   // start
   {
-    'code' : 569,
+    'id' : 569,
     'name' : 'Begin',
     'start' : true,
     'image' : 'begin',
-    'plug' : true
+    'plug' : true,
+    'code' : 'void setup() {'
   },
   
   // end
   {
-    'code' : 369,
+    'id' : 369,
     'name' : 'End',
     'end' : true,
     'image' : 'end',
-    'socket' : true
+    'socket' : true,
+    'code' : '}'
   },
   
   // jump
   {
-    'code' : 307,
+    'id' : 307,
     'name' : 'Jump',
     'image' : 'jump',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'jump();'
   },
   
   // backward
   {
-    'code' : 185,
+    'id' : 185,
     'name' : 'Backward',
     'image' : 'backward',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'backward();'
   },
   
   // forward
   {
-    'code' : 405,
+    'id' : 405,
     'name' : 'Forward',
     'image' : 'forward',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'forward();'
   },
   
   // shake
   {
-    'code' : 557,
+    'id' : 557,
     'name' : 'Shake',
     'image' : 'shake',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'shake();'
   },
   
   // beep
   {
-    'code' : 661,
+    'id' : 661,
     'name' : 'Beep',
     'image' : 'beep',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'beep();'
   },
   
   // sing
   {
-    'code' : 397,
+    'id' : 397,
     'name' : 'Sing',
     'image' : 'sing',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'sing();'
   },
   
   // left
   {
-    'code' : 1189,
+    'id' : 1189,
     'name' : 'Turn Left',
     'image' : 'left',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'left();'
   },
   
   // right
   {
-    'code' : 61,
+    'id' : 61,
     'name' : 'Turn Right',
     'image' : 'right',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'right();'
   },
   
   // spin
   {
-    'code' : 331,
+    'id' : 331,
     'name' : 'Spin',
     'image' : 'spin',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'spin();'
   },
   
   // wiggle
   {
-    'code' : 155,
+    'id' : 155,
     'name' : 'Wiggle',
     'image' : 'wiggle',
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : 'wiggle();'
   },
   
   // tap sensor
   {
-    'code' : 491,
+    'id' : 491,
     'name' : 'Tap Sensor',
     'socket' : { },
     'plug' : { 'dx' : 3, 'dy' : 0 }
@@ -172,30 +184,32 @@ var STATEMENTS = [
   
   // begin repeat
   {
-    'code' : 171,
+    'id' : 171,
     'name' : 'Begin Repeat',
     'image' : 'repeat',
     'class' : 'RepeatStatement',
     'duration' : 5,
     'socket' : true,
     'plug' : true,
-    'param' : { 'dx' : 0, 'dy' : -3 }
+    'param' : { 'dx' : 0, 'dy' : -3 },
+    'code' : 'while (1) {'
   },
   
   // end repeat
   {
-    'code' : 179,
+    'id' : 179,
     'name' : 'End Repeat',
     'image' : 'end-repeat',
     'class' : 'EndRepeatStatement',
     'duration' : 5,
     'socket' : true,
-    'plug' : true
+    'plug' : true,
+    'code' : '}'
   },
   
   // wait for
   {
-    'code' : 611,
+    'id' : 611,
     'name' : 'Wait For',
     'image' : 'wait',
     'socket' : true,
@@ -204,7 +218,7 @@ var STATEMENTS = [
   
   // number 2
   {
-    'code' : 327,
+    'id' : 327,
     'name' : '2',
     'value' : 2,
     'socket' : true
@@ -212,7 +226,7 @@ var STATEMENTS = [
   
   // number 3
   {
-    'code' : 205,
+    'id' : 205,
     'name' : '3',
     'value' : 3,
     'socket' : true
@@ -220,7 +234,7 @@ var STATEMENTS = [
   
   // number 4
   {
-    'code' : 103,
+    'id' : 103,
     'name' : '4',
     'value' : 4,
     'socket' : true
