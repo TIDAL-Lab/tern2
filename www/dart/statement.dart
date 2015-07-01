@@ -20,7 +20,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-part of StickerBook;
+part of tern2;
 
 
 /**
@@ -58,6 +58,9 @@ class Statement {
 
   /** List of connectors (ingoing, outgoing, and params) for this statement */
   List<Connector> connectors;
+
+  /** Code that this statement generates */
+  String code = "";
    
    
   Statement(this.top) {
@@ -67,7 +70,7 @@ class Statement {
     
   factory Statement.fromJSON(var d) {
     TopCode top = new TopCode();
-    top.code = d['code'];
+    top.code = d['id'];
     Statement s = null;
     if (d.containsKey('class')) {
       if (d['class'] == 'RepeatStatement') {
@@ -85,6 +88,7 @@ class Statement {
     s.name = d['name'];
     s.image = d['image'];
     s.value = d['value'];
+    s.code = d['code'];
     if (d.containsKey('start')) s.start = true;
     if (d.containsKey('end')) s.end = true;
     if (d.containsKey('duration')) s.duration = d['duration'];
@@ -132,6 +136,7 @@ class Statement {
     other.name = this.name;
     other.image = this.image;
     other.value = this.value;
+    other.code = this.code;
     other.start = this.start;
     other.end = this.end;
     other.duration = this.duration;
@@ -196,6 +201,21 @@ class Statement {
       }
     }
     return null;
+  }
+
+
+  String compile(int indent) {
+    String tab = "";
+    for (int i=0; i<indent; i++) tab += " ";
+    for (Connector c in connectors) {
+      if (c.isOutgoing && c.hasConnection) {
+        Statement next = c.getConnection();
+        if (start) indent += 3;
+        if (end) indent -= 3;
+        return tab + code + "\n" + next.compile(indent);
+      }
+    }
+    return tab + code;
   }
   
   
@@ -343,6 +363,19 @@ class RepeatStatement extends Statement {
     return super.getNextStatement();
   }
 
+
+  String compile(int indent) {
+    String tab = "";
+    for (int i=0; i<indent; i++) tab += " ";
+    for (Connector c in connectors) {
+      if (c.isOutgoing && c.hasConnection) {
+        Statement next = c.getConnection();
+        return tab + code + "\n" + next.compile(indent + 3);
+      }
+    }
+    return tab + code;
+  }
+
   
   bool doLoop() {
     Statement param = getParameter();
@@ -376,7 +409,7 @@ class EndRepeatStatement extends Statement {
       if (prev == null || prev.isStartStatement) {
         return super.getNextStatement();
       } else if (prev is RepeatStatement) {
-        RepeatStatement br = prev as RepeatStatement;
+        RepeatStatement br = prev;
         if (br.doLoop()) {
           return br;
         } else {
@@ -384,5 +417,19 @@ class EndRepeatStatement extends Statement {
         }
       }
     }
+    return null;
+  }
+
+
+  String compile(int indent) {
+    String tab = "";
+    for (int i=0; i<indent; i++) tab += " ";
+    for (Connector c in connectors) {
+      if (c.isOutgoing && c.hasConnection) {
+        Statement next = c.getConnection();
+        return tab + code + "\n" + next.compile(indent - 3);
+      }
+    }
+    return tab + code;
   }
 }
