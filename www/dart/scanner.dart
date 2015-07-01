@@ -20,7 +20,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-part of StickerBook;
+part of tern2;
 
 
 /**
@@ -38,24 +38,23 @@ class Scanner {
 /*
  * Scan the image and return a list of all topcodes found.
  */
-  List<TopCode> scan(ImageData id) {
+  List<TopCode> scan(ImageData id, CanvasRenderingContext2D ctx) {
     image = id;
     w = image.width;
     h = image.height;
-    
+
     // adaptive threshold
     List<Candidate> candidates = threshold();
-    
+
     // test all candidate spots
     List<TopCode> codes = new List<TopCode>();
 
-    int k = w * 2;
     for (Candidate c in candidates) {
       if (!overlaps(codes, c.x, c.y)) {
         TopCode top = new TopCode();
         top.decode(this, c.x, c.y);
         if (top.isValid) {
-          
+
           // reject topcodes too close to the edges
           if (top.x > top.radius &&
               top.x < w - top.radius &&
@@ -157,8 +156,7 @@ class Scanner {
               b2++;
             }
             else {  // This could be a top code
-              int mask;
-              if (b1 >= 2 && b2 >= 2 && w1 >= 3 &&
+              if (b1 >= 4 && b2 >= 4 && w1 >= 6 &&
                   (b1 + b2 - w1) <= (b1 + b2) &&
                   (b1 + b2 - w1) <= w1 &&
                   (b2 - b1) <= b1 &&
