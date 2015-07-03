@@ -204,18 +204,30 @@ class Statement {
   }
 
 
-  String compile(int indent) {
+  String compile(int nest) {
     String tab = "";
-    for (int i=0; i<indent; i++) tab += " ";
-    for (Connector c in connectors) {
-      if (c.isOutgoing && c.hasConnection) {
-        Statement next = c.getConnection();
-        if (start) indent += 3;
-        if (end) indent -= 3;
-        return tab + code + "\n" + next.compile(indent);
-      }
+    Statement next = getNextStatement();
+
+    if (start && next != null) {
+      return code + "\n" + next.compile(nest + 1);
     }
-    return tab + code;
+
+    else if (end) {
+      while (nest > 0) {
+        tab += "}\n";
+        nest--;
+      }
+      return tab;
+    }
+
+    else if (next != null) {
+      for (int i=0; i<nest; i++) tab += "   ";
+      return tab + code + "\n" + next.compile(nest);
+    }
+
+    else {
+      return code;
+    }
   }
   
   
@@ -349,7 +361,7 @@ class RepeatStatement extends Statement {
     }
   }
   
-  
+/*  
   Statement getNextStatement() {
     Statement param = getParameter();
     
@@ -362,18 +374,17 @@ class RepeatStatement extends Statement {
     }
     return super.getNextStatement();
   }
+*/
 
-
-  String compile(int indent) {
+  String compile(int nest) {
     String tab = "";
-    for (int i=0; i<indent; i++) tab += " ";
-    for (Connector c in connectors) {
-      if (c.isOutgoing && c.hasConnection) {
-        Statement next = c.getConnection();
-        return tab + code + "\n" + next.compile(indent + 3);
-      }
+    for (int i=0; i<nest; i++) tab += "   ";
+    Statement next = getNextStatement();
+    if (next != null) {
+      return tab + code + "\n" + next.compile(nest + 1);
+    } else {
+      return tab + code + "\n";
     }
-    return tab + code;
   }
 
   
@@ -401,7 +412,7 @@ class EndRepeatStatement extends Statement {
     return s;
   }
   
-  
+/*  
   Statement getNextStatement() {
     Statement prev = this;
     while (prev != null) {
@@ -419,17 +430,24 @@ class EndRepeatStatement extends Statement {
     }
     return null;
   }
+*/
 
-
-  String compile(int indent) {
+  String compile(int nest) {
+    Statement next = getNextStatement();
     String tab = "";
-    for (int i=0; i<indent; i++) tab += " ";
-    for (Connector c in connectors) {
-      if (c.isOutgoing && c.hasConnection) {
-        Statement next = c.getConnection();
-        return tab + code + "\n" + next.compile(indent - 3);
-      }
+
+    if (nest >= 2 && next != null) {
+      nest--;
+      for (int i=0; i<nest; i++) tab += "   ";
+      return tab + code + "\n" + next.compile(nest);
     }
-    return tab + code;
+
+    else if (nest < 2 && next != null) {
+      return next.compile(nest);
+    }
+
+    else {
+      return "";
+    }
   }
 }
