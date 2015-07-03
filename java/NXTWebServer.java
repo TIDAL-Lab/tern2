@@ -12,17 +12,19 @@ import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+
+
 public class NXTWebServer extends WebSocketServer {
   
 	private static int counter = 0;
   
-  private NXTDriver robot;
-	
 	public NXTWebServer( int port , Draft d ) throws UnknownHostException {
-		super( new InetSocketAddress( port ), Collections.singletonList( d ) );
-    
-    robot = new NXTDriver();
-    robot.open("/dev/tty.NXT-DevB");
+    super( new InetSocketAddress( port ), Collections.singletonList( d ) );
 	}
 	
 
@@ -31,9 +33,6 @@ public class NXTWebServer extends WebSocketServer {
 		counter++;
 		System.out.println( "///////////Opened connection number" + counter );
     conn.send("@dart OPEN");
-    if (robot.isConnected()) {
-      conn.send("@dart FOUND NXT");
-    }
 	}
 
   
@@ -52,14 +51,51 @@ public class NXTWebServer extends WebSocketServer {
   
 	@Override
 	public void onMessage( WebSocket conn, String message ) {
-    if ("@nxt CONNECT".equals(message)) {
-      robot.open("/dev/tty.NXT-DevB");
-      if (robot.isConnected()) {
-        conn.send("@dart FOUND NXT");
+    if (message.startsWith("@compile ")) {
+      System.out.println(message);
+
+      // First write the hook.cpp file out
+      try {
+        FileOutputStream fout = new FileOutputStream("arduino/hook.cpp");
+        fout.write(message.substring(9).getBytes());
+        fout.close();
+        System.out.println("wrote hook");
       }
-    } else {
-      robot.doCommand(message);
-  		conn.send( "@dart DONE" );
+      catch (Exception x) {
+        System.out.println(x);
+      }
+
+      // Touch the main CPP file to trigger a rebuild
+      try {
+        String s;
+        ProcessBuilder pb = new ProcessBuilder("touch", "redbot.cpp");
+        pb.directory(new File("arduino"));
+        Process p = pb.start();
+        BufferedReader stdInput = new BufferedReader(
+          new InputStreamReader(p.getInputStream()));
+        while ((s = stdInput.readLine()) != null) {
+          System.out.println(s);
+        }
+      } catch (Exception x) {
+        System.out.println(x);
+      }
+
+      // Then run the makefile
+      try {
+        String s;
+        ProcessBuilder pb = new ProcessBuilder("make", "build", "upload");
+        pb.directory(new File("arduino"));
+        Process p = pb.start();
+        BufferedReader stdInput = new BufferedReader(
+          new InputStreamReader(p.getInputStream()));
+        while ((s = stdInput.readLine()) != null) {
+          System.out.println(s);
+        }
+
+        conn.send("@dart SUCCESS");
+      } catch (Exception x) {
+        System.out.println(x);
+      }
     }
 	}
 
