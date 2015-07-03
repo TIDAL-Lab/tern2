@@ -1,0 +1,1 @@
+javac -cp lib/java_websocket.jar:lib/nrjavaserial-3.8.8.jar java/*.java -d java
