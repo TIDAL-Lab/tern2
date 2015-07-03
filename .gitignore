@@ -1,2 +1,7 @@
 *.class
 *.pdf
+*/Arduino.app
+*.eep
+*.hex
+*.elf
+*.o
