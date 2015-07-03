@@ -20,7 +20,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-library StickerBook;
+library tern2;
 
 import 'dart:html';
 import 'dart:math';
@@ -38,8 +38,8 @@ part 'topcode.dart';
 part 'utils.dart';
 
 
-const VIDEO_WIDTH = 800;
-const VIDEO_HEIGHT = 600;
+const VIDEO_WIDTH = 1280;  // 800
+const VIDEO_HEIGHT = 720;  // 600
 
 Tern tern;
 
@@ -61,7 +61,7 @@ class Tern {
   MediaStream stream;
   Program program;
   
-  /* Communicates to the NXT robot through a websocket (via Java) */
+  /* Communicates with robot through a websocket (via Java) */
   WebSocket socket;
 
 
@@ -75,7 +75,6 @@ class Tern {
     video.onPlay.listen((e) {
       setHtmlOpacity('toolbar', 0.0);
       program = null;
-      //ctx.drawImage(video, 0, 0);
       timer = new Timer.periodic(const Duration(milliseconds : 30), refreshCanvas);
     });
 
@@ -94,12 +93,17 @@ class Tern {
     socket = new WebSocket("ws://localhost:9003");
     socket.onOpen.listen((e) {
       print("Connected.");
-      //sendRobotCommand("@nxt CONNECT");
     });
     socket.onMessage.listen((MessageEvent e) {
       if (e.data == "@dart DONE") {
         stepProgram();
-      } else if (e.data == "@dart FOUND NXT") {
+      } 
+      else if (e.data == "@dart SUCCESS") {
+        print("compile success");
+        Sounds.playSound('ping');
+      }
+
+      else if (e.data == "@dart FOUND NXT") {
         setHtmlOpacity("robot-button", 1.0);
       } else {
         print(e.data);
@@ -114,7 +118,7 @@ class Tern {
   bool sendRobotCommand(String command) {
     print(command);
     if (socket != null && socket.readyState == WebSocket.OPEN) {
-      socket.send(command);
+      socket.send("@compile $command");
       return true;
     } else {
       return false;
@@ -149,6 +153,8 @@ class Tern {
       window.navigator.getUserMedia(audio : false, video : vconfig).then((var ms) {
         video.src = Url.createObjectUrl(ms);
         stream = ms;
+        print(video.width);
+        print(video.height);
       });
     }
   }
@@ -173,35 +179,40 @@ class Tern {
  */
   void refreshCanvas(Timer timer) {
 
-    // draw a frame from the video stream onto the canvas
+
+    // draw a frame from the video stream onto the canvas (flipped horizontally)
+    ctx.save();
+    //ctx.scale(-1, 1);
+    //ctx.drawImageScaled(video, 0, 0, VIDEO_WIDTH * -1, VIDEO_HEIGHT);
     ctx.drawImage(video, 0, 0);
-    
+    ctx.restore();
+
     // grab a bitmap from the canvas
     ImageData id = ctx.getImageData(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
-    program = compiler.compile(id);
+    program = compiler.compile(id, ctx);
     program.draw(ctx);
     
     // STATUS: Looking for stickers...
     if (program.isEmpty) {
-      setHtmlText('scan-message', 'Looking for stickers...');
+      setHtmlText('scan-message', 'Looking for blocks...');
       setHtmlOpacity('scan-message', 1.0);
     }
     
     // STATUS: Looking for BEGIN...
     else if (!program.hasStartStatement) {
-      setHtmlText('scan-message', 'Looking for BEGIN sticker...');
+      setHtmlText('scan-message', 'Looking for BEGIN block...');
       setHtmlOpacity('scan-message', 1.0);
     }
     
     // STATUS: Looking for END...
     else if (!program.hasEndStatement) {
-      setHtmlText('scan-message', 'Looking for END sticker...');
+      setHtmlText('scan-message', 'Looking for END block...');
       setHtmlOpacity('scan-message', 1.0);
     }
     
     // STATUS: Can't connect ...
     else if (!program.isComplete) {
-      setHtmlText('scan-message', "Can't connect BEGIN sticker to END sticker...");
+      setHtmlText('scan-message', "Can't connect BEGIN to END...");
       setHtmlOpacity('scan-message', 1.0);
     }
     
@@ -213,6 +224,7 @@ class Tern {
       setHtmlOpacity('toolbar', 1.0);
       stopVideo();
       program.restart();
+      sendRobotCommand(program.toString());
       Rectangle bounds = program.getBounds;
       id = ctx.getImageData(bounds.left, bounds.top, bounds.width, bounds.height);
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
@@ -271,9 +283,6 @@ class Tern {
       if (!sendRobotCommand(program.message)) {
         new Timer(const Duration(milliseconds : 1600), () => stepProgram());
       }
-      
-      int iw = program.block.width;
-      int ih = program.block.height;
       ctx.drawImageScaled(program.block,  25, 25, 150, 150);
       program.step();
     }
