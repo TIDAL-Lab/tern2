@@ -61,7 +61,7 @@ var STATEMENTS = [
     'start' : true,
     'image' : 'begin',
     'plug' : true,
-    'code' : 'void setup() {'
+    'code' : 'void action() {'
   },
   
   // end
