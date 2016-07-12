@@ -1,0 +1,11 @@
+name: tern2
+dependencies:
+      
+transformers:
+- $dart2js:
+    checked: true
+    minify: true
+    verbose: true
+    suppressWarnings: false
+    suppressHints: false
+    terse: false
