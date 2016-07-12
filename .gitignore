@@ -5,3 +5,7 @@
 *.hex
 *.elf
 *.o
+.packages
+build
+pubspec.lock
+packages
