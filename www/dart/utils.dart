@@ -1,6 +1,6 @@
 /*
  * Tern Tangible Programming Language
- * Copyright (c) 2013 Michael S. Horn
+ * Copyright (c) 2016 Michael S. Horn
  * 
  *           Michael S. Horn (michael-horn@northwestern.edu)
  *           Northwestern University
@@ -24,25 +24,15 @@ part of tern2;
 
 
 /**
- * Detects whether or not this is an iPad based on the user-agent string
- */
-bool isIPad() {
-  return window.navigator.userAgent.contains("iPad");
-}
-
-/**
  * Binds a click event to a button
  */
 void bindClickEvent(String id, Function callback) {
   Element el = querySelector("#${id}");
   if (el != null) {
-    if (isIPad()) {
-      //el.onTouchEnd.listen(callback);    
-    } else {
-      el.onMouseUp.listen(callback);
-    }
+    el.onMouseUp.listen(callback);
   }
 }
+
 
 /**
  * Adds a class to a DOM element
