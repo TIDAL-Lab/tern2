@@ -1,5 +1,6 @@
 void action() {
-  spin();
-  left();
-  right();
+   sing();
+   spin();
+   backward();
+   forward();
 }
