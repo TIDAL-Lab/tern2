@@ -1,6 +1,6 @@
 /*
- * Roberto StickerBook
- * Copyright (c) 2013 Michael S. Horn
+ * Tern Tangible Programming Language
+ * Copyright (c) 2016 Michael S. Horn
  * 
  *           Michael S. Horn (michael-horn@northwestern.edu)
  *           Northwestern University
@@ -38,8 +38,8 @@ part 'topcode.dart';
 part 'utils.dart';
 
 
-const VIDEO_WIDTH = 1280;  // 800
-const VIDEO_HEIGHT = 720;  // 600
+const VIDEO_WIDTH = 1280; // 800
+const VIDEO_HEIGHT = 720; // 600
 
 Tern tern;
 
@@ -47,7 +47,6 @@ void main() {
   
   Sounds.loadSound('ding');
   Sounds.loadSound('ping');
-  
   tern = new Tern();
 }
 
@@ -58,60 +57,63 @@ class Tern {
   TangibleCompiler compiler;
   VideoElement video = null;
   Timer timer;
-  MediaStream stream;
+  /* Communicates with robot through a websocket (via Java) */
+  WebSocket socket;  
+  //MediaStream stream = null;
   Program program;
   
-  /* Communicates with robot through a websocket (via Java) */
-  WebSocket socket;
-
 
   
   Tern() {
-    CanvasElement canvas = querySelector("#main-canvas");
+    CanvasElement canvas = querySelector("#video-canvas");
     ctx = canvas.getContext("2d");
     compiler = new TangibleCompiler();
     video = querySelector("#video-stream");
     video.autoplay = true;
     video.onPlay.listen((e) {
-      setHtmlOpacity('toolbar', 0.0);
       program = null;
       timer = new Timer.periodic(const Duration(milliseconds : 30), refreshCanvas);
     });
 
     // start the websocket connection
-    connectToRobot();
-    
+    connectToRobot();    
+
     // bind button events
-    bindClickEvent("robot-button", (event) { connectToRobot(); });
-    bindClickEvent("camera-button", startStopVideo);
-    bindClickEvent("play-button", (event) { playPause(); });
-    bindClickEvent("restart-button", (event) { restart(); });
-  }
-  
+    //bindClickEvent("camera-button", startStopVideo);
 
-  void connectToRobot() {
-    socket = new WebSocket("ws://localhost:9003");
-    socket.onOpen.listen((e) {
-      print("Connected.");
-    });
-    socket.onMessage.listen((MessageEvent e) {
-      if (e.data == "@dart DONE") {
-        stepProgram();
-      } 
-      else if (e.data == "@dart SUCCESS") {
-        print("compile success");
-        Sounds.playSound('ping');
-      }
-
-      else if (e.data == "@dart FOUND NXT") {
-        setHtmlOpacity("robot-button", 1.0);
-      } else {
-        print(e.data);
+/*
+    window.navigator.mediaDevices.enumerateDevices().then((var devices) {
+      for (var d in devices) {
+        print(d.label);
+        print(d.groupId);
+        print(d.deviceId);
+        print(d.kind);
       }
     });
+*/    
   }
 
-  
+
+void connectToRobot() {
+  socket = new WebSocket("ws://localhost:9003");
+  socket.onOpen.listen((e) {
+    print("Connected.");
+  });
+  socket.onMessage.listen((MessageEvent e) {
+    if (e.data == "@dart DONE") {
+      //stepProgram();
+    } 
+    else if (e.data == "@dart SUCCESS") {
+      print("compile success");
+      Sounds.playSound('ping');
+    }
+    else {
+      print(e.data);
+    }
+  });
+}
+
+
 /**
  * Send a command to the NXT robot
  */
@@ -125,10 +127,11 @@ class Tern {
     }
   }
 
-  
-/*
+
+/**
  * Start / stop the video stream
  */
+ /*
   void startStopVideo(var event) {
     if (stream == null) {
       startVideo();
@@ -136,59 +139,72 @@ class Tern {
       stopVideo();
     }
   }
-
+*/
 
 /**
  * Start the video stream
  */
+/* 
   void startVideo() {
     if (stream == null) {
-      restart();
-      var vconfig = {
-        'mandatory' : {
-          'minWidth' : VIDEO_WIDTH,
-          'minHeight' : VIDEO_HEIGHT
+      var config = {
+        "audio" : false,
+        "video" : {
+          "deviceId" : "90271ce40730999d3556964354ca563fef8aca005d5b6cb8db5db1fcbb5b7600",
+          "width" : { "exact" : 1280 },
+          "height" : { "exact" : 720 }
         }
       };
-      window.navigator.getUserMedia(audio : false, video : vconfig).then((var ms) {
+      window.navigator.mediaDevices.getUserMedia(config).then((var ms) {
+        video.width = 1280;
+        video.height = 720;
         video.src = Url.createObjectUrl(ms);
         stream = ms;
-        print(video.width);
-        print(video.height);
       });
     }
   }
-
+*/
 
 /**
  * Stop the video stream
  */
   void stopVideo() {
+    video.pause();
+    if (timer != null) timer.cancel();
+/*    
     if (stream != null) {
       if (timer != null) timer.cancel();
       video.pause();
-      stream.stop();
+      stream.getVideoTracks()[0].stop();
       stream = null;
       setHtmlOpacity('scan-message', 0.0);
     }
+*/
   }
-
 
 /*
  * Called 30 frames a second while the camera is on
  */
   void refreshCanvas(Timer timer) {
 
+    if (video.className == "stopped") {
+      timer.cancel();
+      print("stopping scan");
+      return;
+    }
 
     // draw a frame from the video stream onto the canvas (flipped horizontally)
     ctx.save();
-    //ctx.scale(-1, 1);
-    //ctx.drawImageScaled(video, 0, 0, VIDEO_WIDTH * -1, VIDEO_HEIGHT);
-    ctx.drawImage(video, 0, 0);
+    {
+      ctx.translate(video.videoWidth, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImageScaled(video, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+      ctx.drawImage(video, 0, 0);
+    }
     ctx.restore();
 
     // grab a bitmap from the canvas
-    ImageData id = ctx.getImageData(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+    ImageData id = ctx.getImageData(0, 0, video.videoWidth, video.videoHeight);
     program = compiler.compile(id, ctx);
     program.draw(ctx);
     
@@ -225,69 +241,12 @@ class Tern {
       stopVideo();
       program.restart();
       sendRobotCommand(program.toString());
+      print(program.toString());
       Rectangle bounds = program.getBounds;
       id = ctx.getImageData(bounds.left, bounds.top, bounds.width, bounds.height);
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       ctx.fillRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
       ctx.putImageData(id, bounds.left, bounds.top);    
-    }
-  }
-
-
-  void restart() {
-    setBackgroundImage('play-button', 'images/play.png');
-    if (program != null && program.isComplete) {
-      program.restart();
-      timer.cancel();
-    }
-  }
-  
-  
-  void play() {
-    setBackgroundImage('play-button', 'images/pause.png');
-    if (program != null && program.isComplete) {
-      program.play();
-      stepProgram();
-      //timer = new Timer.periodic(const Duration(milliseconds : 100), animate);
-    }
-  }
-  
-  
-  void pause() {
-    setBackgroundImage('play-button', 'images/play.png');
-    if (program != null && program.isComplete) {
-      program.pause();
-      //timer.cancel();
-    }
-  }
-  
-  
-  void playPause() {
-    if (program != null && program.isComplete) {
-      if (program.isPlaying) {
-        pause();
-      } else {
-        play();
-      }
-    }
-  }
-
-  
-  //void animate(Timer timer) {
-  void stepProgram() {
-    if (program == null) return;
-    if (program.isDone) {
-      restart();
-    }
-    else if (program.isPlaying) {
-      if (!sendRobotCommand(program.message)) {
-        new Timer(const Duration(milliseconds : 1600), () => stepProgram());
-      }
-      ctx.drawImageScaled(program.block,  25, 25, 150, 150);
-      program.step();
-    }
-    else {
-      restart();
     }
   }
 }
