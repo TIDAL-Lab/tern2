@@ -124,7 +124,8 @@ class TopCode {
     code = -1;
     int checksum = 0;
     
-    for (int sector = SECTORS - 1; sector >= 0; sector--) {
+    //for (int sector = SECTORS - 1; sector >= 0; sector--) {
+    for (int sector = 0; sector<SECTORS; sector++) {
       dx = cos(ARC * sector + arca);
       dy = sin(ARC * sector + arca);
       
@@ -183,7 +184,7 @@ class TopCode {
       bits = (((bits << 1) & mask) | (bits >> (SECTORS - 1)));
       if (bits < min) {
         min = bits;
-        this.orientation = (i * -ARC);
+        this.orientation = (i * ARC);
       }
     }
     
@@ -204,7 +205,8 @@ class TopCode {
     ctx.arc(x, y, r, 0, PI * 2, true);
     ctx.fill();
     
-    for (int i=0; i<SECTORS; i++) {
+    //for (int i=0; i<SECTORS; i++) {
+    for (int i=SECTORS-1; i>=0; i--) {
       double start = i * ARC + o;
       ctx.fillStyle = ((bits & 0x1) > 0)? "white" : "black";
       ctx.beginPath();
