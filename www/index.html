@@ -11,7 +11,7 @@
    <div class="content">
       
       <video id="video-stream"></video>
-      <canvas id="video-canvas" width="1280" height="720"></canvas>
+      <canvas id="video-canvas" width="1920" height="1080"></canvas>
       
       <div id="scan-message">Looking for stickers...</div>
       
@@ -23,13 +23,17 @@
    
    <script src="dart.js" type="text/javascript"></script>
    <script>
+
+const VIDEO_WIDTH = 1920;
+const VIDEO_HEIGHT = 1080;
+
 //create constraints object
 var hdConstraints = {
    audio: false,
    video: {
-      //deviceId: deviceId,
-      width: {exact: 1280},
-      height: {exact: 720}
+      deviceId: undefined,
+      width: {exact: VIDEO_WIDTH},
+      height: {exact: VIDEO_HEIGHT}
    }
 };
 var video = document.querySelector("#video-stream");
@@ -47,6 +51,7 @@ function gotDevices(deviceInfos) {
       if (deviceInfo.kind === 'videoinput') {
          console.log(deviceInfo.deviceId);
          deviceId = deviceInfo.deviceId;
+         hdConstraints.video.deviceId = deviceId;
          camcount++;
       }
    }
@@ -81,8 +86,8 @@ function startVideo() {
    if (!stream) {
       navigator.mediaDevices.getUserMedia(hdConstraints)
          .then(function(mediaStream) {
-            video.width = 1280;
-            video.height = 720;
+            video.width = VIDEO_WIDTH;
+            video.height = VIDEO_HEIGHT;
             video.srcObject = mediaStream;
             video.className = "started";
             stream = mediaStream;
