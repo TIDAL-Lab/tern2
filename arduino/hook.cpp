@@ -1,6 +1,14 @@
 void action() {
-   sing();
-   spin();
-   backward();
-   forward();
+   left();
+   while (1) {
+      right();
+      backward();
+      forward();
+      backward();
+      forward();
+      shake();
+      spin();
+      wiggle();
+      beep();
+}
 }
