@@ -124,8 +124,9 @@ class TopCode {
     code = -1;
     int checksum = 0;
     
-    //for (int sector = SECTORS - 1; sector >= 0; sector--) {
-    for (int sector = 0; sector<SECTORS; sector++) {
+    for (int sector = SECTORS - 1; sector >= 0; sector--) {
+    // ---- uncomment for horizontal flipped image ---- 
+    //for (int sector = 0; sector<SECTORS; sector++) {
       dx = cos(ARC * sector + arca);
       dy = sin(ARC * sector + arca);
       
@@ -177,14 +178,16 @@ class TopCode {
     
     // correct arc-adjustment
     arca -= (ARC * 0.5);
-    
+
     orientation = 0.0;
     
     for (int i=1; i<=SECTORS; i++) {
       bits = (((bits << 1) & mask) | (bits >> (SECTORS - 1)));
       if (bits < min) {
         min = bits;
-        this.orientation = (i * ARC);
+        // ---- uncomment for horizontal flipped image ---- 
+        this.orientation = (i * -ARC);
+        // this.orientation = (i * ARC);
       }
     }
     
@@ -205,8 +208,9 @@ class TopCode {
     ctx.arc(x, y, r, 0, PI * 2, true);
     ctx.fill();
     
-    //for (int i=0; i<SECTORS; i++) {
-    for (int i=SECTORS-1; i>=0; i--) {
+    for (int i=0; i<SECTORS; i++) {
+    // ---- uncomment for horizontally flipped image ---  
+    //for (int i=SECTORS-1; i>=0; i--) {
       double start = i * ARC + o;
       ctx.fillStyle = ((bits & 0x1) > 0)? "white" : "black";
       ctx.beginPath();
