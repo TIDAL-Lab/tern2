@@ -38,8 +38,8 @@ part 'topcode.dart';
 part 'utils.dart';
 
 
-const VIDEO_WIDTH = 1280; // 800
-const VIDEO_HEIGHT = 720; // 600
+const VIDEO_WIDTH = 1920; // 1280; // 800
+const VIDEO_HEIGHT = 1080; // 720; // 600
 
 Tern tern;
 
@@ -95,15 +95,18 @@ class Tern {
 
 
 void connectToRobot() {
-  socket = new WebSocket("ws://localhost:9003");
+  String server = "ws://localhost:9003";
+  setHtmlText('scan-message', "Not connected to $server");
+  socket = new WebSocket(server);
   socket.onOpen.listen((e) {
-    print("Connected.");
+    setHtmlText('scan-message', "Connected to $server");
   });
   socket.onMessage.listen((MessageEvent e) {
     if (e.data == "@dart DONE") {
       //stepProgram();
     } 
     else if (e.data == "@dart SUCCESS") {
+      setHtmlText('scan-message', "Program loaded on robot!");
       print("compile success");
       Sounds.playSound('ping');
     }
@@ -196,9 +199,8 @@ void connectToRobot() {
     // draw a frame from the video stream onto the canvas (flipped horizontally)
     ctx.save();
     {
-      ctx.translate(video.videoWidth, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImageScaled(video, 0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+      //ctx.translate(video.videoWidth, 0);
+      //ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0);
     }
     ctx.restore();
@@ -236,8 +238,8 @@ void connectToRobot() {
     else {
       Sounds.playSound('ping');
       setHtmlText('scan-message', "Found program!");
-      setHtmlOpacity('scan-message', 0.0);
-      setHtmlOpacity('toolbar', 1.0);
+      //setHtmlOpacity('scan-message', 0.0);
+      //setHtmlOpacity('toolbar', 1.0);
       stopVideo();
       program.restart();
       sendRobotCommand(program.toString());
